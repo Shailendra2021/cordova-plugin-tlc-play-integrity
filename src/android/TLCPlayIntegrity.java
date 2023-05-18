@@ -1,5 +1,6 @@
 package com.tlcgroup;
 
+import android.app.Activity;
 import android.util.Base64;
 import android.util.Log;
 
@@ -11,7 +12,9 @@ import com.google.android.play.core.integrity.IntegrityTokenRequest;
 import com.google.android.play.core.integrity.IntegrityTokenResponse;
 
 import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaWebView;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,7 +28,10 @@ import java.util.Map;
 public class TLCPlayIntegrity extends CordovaPlugin {
 
   private final String LOG_TAG = "TLCPlayIntegrity";
-  private final long CLOUD_PROJECT_NUMBER = 470007365374l;
+
+  public void initialize(CordovaInterface cordova, CordovaWebView webView) {
+    super.initialize(cordova, webView);
+  }
 
   @Override
   public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
@@ -40,6 +46,8 @@ public class TLCPlayIntegrity extends CordovaPlugin {
 
   private void certifyKey(String nonce, CallbackContext callbackContext) {
     Log.d(LOG_TAG, "Nonce: " + nonce);
+    final long CLOUD_PROJECT_NUMBER = Long.parseLong(getStringResourceByName("google_cloud_project_number"));
+    Log.d(LOG_TAG, "Project Number: " + CLOUD_PROJECT_NUMBER);
     IntegrityManager integrityManager = IntegrityManagerFactory.create(this.cordova.getActivity().getApplicationContext());
     Task<IntegrityTokenResponse> integrityTokenResponse = integrityManager.requestIntegrityToken(IntegrityTokenRequest.builder().setCloudProjectNumber(CLOUD_PROJECT_NUMBER).setNonce(nonce).build());
     integrityTokenResponse.addOnCompleteListener(new OnCompleteListener<IntegrityTokenResponse>() {
@@ -61,5 +69,12 @@ public class TLCPlayIntegrity extends CordovaPlugin {
         }
       }
     });
+  }
+
+  private String getStringResourceByName(String aString) {
+    Activity activity = cordova.getActivity();
+    String packageName = activity.getPackageName();
+    int resId = activity.getResources().getIdentifier(aString, "string", packageName);
+    return activity.getString(resId);
   }
 }
